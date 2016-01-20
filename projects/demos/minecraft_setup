@@ -1,0 +1,5 @@
+pi sudo mv /opt/raspberrystem/ide/start_client.sh /opt/raspberrystem/ide/start_client.orig.sh
+pi cp /var/lib/menu-xdg/applications/menu-xdg/X-Debian-Games-minecraft_pi.desktop Desktop
+scp minecraft.py pi@raspberrypi:
+scp minecraft.sh pi@raspberrypi:
+scp minecraft.desktop pi@raspberrypi:Desktop

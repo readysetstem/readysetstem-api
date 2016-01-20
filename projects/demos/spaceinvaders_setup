@@ -1,0 +1,6 @@
+pi sudo cp /opt/raspberrystem/ide/start_client.sh /opt/raspberrystem/ide/start_client.orig.sh
+pi "sudo sh -c 'echo \#\!/bin/sh > /opt/raspberrystem/ide/start_client.sh'"
+pi "sudo sh -c 'echo python3 /home/pi/spaceinvaders.py >> /opt/raspberrystem/ide/start_client.sh'"
+pi cat /opt/raspberrystem/ide/start_client.sh
+pi sudo reboot
+
