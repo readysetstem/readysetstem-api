@@ -114,11 +114,11 @@ class Button(Input):
             return False
 
     def configure(self, pull=None):
-        if pull != None:
-            raise AttributeError('Buttons cannout configure the pullup')
-        super().configure(self, pull=pull)
+        """Not available for buttons."""
+        raise NotImplementedError('Buttons cannot configure the pullup')
 
     def disable(self):
+        '''Disable the GPIO pin.'''
         if self._poll_thread:
             self._poll_thread_stop.set()
             self._poll_thread.join()

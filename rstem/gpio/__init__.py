@@ -158,6 +158,7 @@ class Output(Pin):
         self._set(self._active_low)
 
     def disable(self):
+        '''Disable the GPIO pin.'''
         self._fvalue.close()
         super().disable()
 
@@ -192,6 +193,7 @@ class Input(Pin):
         self._fvalue = retry_func_on_error(partial(open, self.gpio_dir + '/value', 'r'))
 
     def configure(self, pull=None):
+        '''Set pullup on `pin`.  See `__init__` for info on the `pull` argument.'''
         self._set_pull(pull)
 
     def _get(self):
@@ -207,6 +209,7 @@ class Input(Pin):
         return not self.is_on()
 
     def disable(self):
+        '''Disable the GPIO pin.'''
         self._fvalue.close()
         super().disable()
 

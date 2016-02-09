@@ -373,6 +373,37 @@ class Note(BaseSound):
 
     def __init__(self, pitch):
         '''Create a sound object that is a sine wave of the given `pitch`.
+
+        `pitch` can either be a number that is the frequency Hz (for example
+        440 or 256.7), or it can be a string which represents the musical note.
+        As a string, it should be 1 to 3 characters, of the form:
+
+            NSO
+
+        where
+
+         1. N is the note (required), from A to G
+         1. S is an optional semitone, either '#' (sharp) or 'b' (flat)
+         1. O is the optional octave, default octave is 4.
+
+        A 440Hz 'A' could be represented by any of the following:
+
+         - 440
+         - 'A'
+         - 'A4'
+
+        For example, a ascending/descending chromatic scale on C could be
+        represented by:
+
+            ascending = \\
+                ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#',
+                'G', 'G#', 'A5', 'A#5', 'B5', 'C5']
+            descending = \\
+                ['C5', 'B5', 'Bb5', 'A5', 'Ab5', 'G',
+                'Gb', 'F', 'E', 'Eb', 'D', 'Db', 'C']
+
+        Also note, semitones are extact halftones, so for example 'C#' is
+        identical to 'Db'.
         '''
         super().__init__()
 
@@ -414,6 +445,17 @@ class Note(BaseSound):
             self.internal_gain = A6_frequency / self.frequency
 
     def play(self, duration=1):
+        '''Starts playing the Note.
+
+        This function starts playing the sound, and returns immediately - the
+        sound plays in the background.  To wait for the sound, use `wait()`.
+        Because sound functions can be chained, to create, play and wait for a
+        sound to complete can be done in one compound command.  For example:
+
+            Note('A').play().wait()
+
+        Returns itself, so this function can be chained.
+        '''
         super().play(duration=duration)
         return self
 
