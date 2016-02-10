@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 '''
-This module provides function to control a Minecraft Pi player.
+This module provides functions to control the Minecraft player, by simulating
+keystrokes and mouse movements.  In addition, it provides helper functions for
+show()ing/hide()ing the Minecraft application.
 '''
 
 import os
@@ -67,6 +69,13 @@ item_keys = [eval('uinput.KEY_{:d}'.format(item+1)) for item in range(8)]
 MIN_DURATION_PRESS = 0.1
 
 def show(show=True, hide_at_exit=True):
+    '''Shows (opens and brings to the front) the Minecraft application window.
+
+    Requires that Minecraft is running.
+
+    If `hide_at_exit` is `True`, then when the Python application exits, the
+    Minecraft application will be minimized (via `hide()`).
+    '''
     ret = shcall(SHOW_WIN_CMD if show else HIDE_WIN_CMD)
     if ret:
         raise IOError('Could not show/hide minecraft window.  Is it running?')
@@ -84,12 +93,38 @@ def show(show=True, hide_at_exit=True):
         atexit.register(hide_ignoring_errors)
 
 def hide():
+    '''Hides (minimizes) the Minecraft application.
+
+    Requires that Minecraft is running.
+    '''
     show(show=False)
 
 def key_release(key):
+    '''Simulate a key release in the Minecraft window.
+
+    See also `key_press()`.
+    '''
     key_press(key, release=True)
 
 def key_press(key, duration=None, release=False, wait=True):
+    '''Simulate a keyboard key press in the Minecraft window.
+
+    `key` is the keycode of the key to be pressed (keycode values are from the
+    uinput module, e.g. `uinput.KEY_A`)
+
+    If `release` is True, then this simulates a key being released instead of
+    pressed.
+
+    If `duration` is None, then the key is pressed and the function returns.
+    Otherwise, if a `duration` (in seconds) is given, the key is pressed and
+    will automatically be released after `duration` seconds in one of two
+    ways:
+
+     1. If `wait` is `True`, the function will not return until the `duration`
+     has elapsed.
+     1. If `wait` is `False`, the function will return immediately, and the key
+     will be released after `duration` seconds via a timer.
+    '''
     if release:
         device.emit(key, 0)
     else:
@@ -105,59 +140,98 @@ def key_press(key, duration=None, release=False, wait=True):
                 Timer(duration, key_release, args=[key]).start()
 
 def backward(duration=None, release=False, wait=True):
+    '''Move Steve backward.  Simulates a `key_press()` of `S`.'''
     key_press(uinput.KEY_S, duration, release, wait)
 
 def forward(duration=None, release=False, wait=True):
+    '''Move Steve forward.  Simulates a `key_press()` of `W`.'''
     key_press(uinput.KEY_W, duration, release, wait)
 
 def left(duration=None, release=False, wait=True):
+    '''Move Steve left.  Simulates a `key_press()` of `A`.'''
     key_press(uinput.KEY_A, duration, release, wait)
 
 def right(duration=None, release=False, wait=True):
+    '''Move Steve right.  Simulates a `key_press()` of `D`.'''
     key_press(uinput.KEY_D, duration, release, wait)
 
 def jump(duration=None, release=False, wait=True):
+    '''Make Steve jump.  Simulates a `key_press()` of the spacebar.'''
     key_press(uinput.KEY_SPACE, duration, release, wait)
 
 def crouch(duration=None, release=False, wait=True):
+    '''Make Steve crouch.  Simulates a `key_press()` of the left shift key.'''
     key_press(uinput.KEY_LEFTSHIFT, duration, release, wait)
 
 def ascend(duration=None, release=False, wait=True):
+    '''Move Steve upward in fly mode.
+
+    Equivalent to `jump()`, i.e. will only cause Steve to ascend when in fly
+    mode.
+    '''
     jump(duration, release, wait)
 
 def descend(duration=None, release=False, wait=True):
+    '''Move Steve downward in fly mode.
+
+    Equivalent to `crouch()`, i.e. will only cause Steve to descend when in fly
+    mode.
+    '''
     crouch(duration, release, wait)
 
 def stop():
+    '''Stop all of Steve's current movements, i.e. release all keys.'''
     for key in keys:
         key_release(key)
 
 def smash(duration=None, release=False, wait=True):
+    '''Make Steve smash a block.  Simulates a `key_press()` of the left mouse button.'''
     key_press(uinput.BTN_LEFT, duration, release, wait)
 
 def place(duration=None, release=False, wait=True):
+    '''Make Steve place a block.  Simulates a `key_press()` of the right mouse button.'''
     key_press(uinput.BTN_RIGHT, duration, release, wait)
 
 def hit(*args, **kwargs):
+    '''Make Steve hit a block.  Simulates a `key_press()` of the right mouse button.
+
+    Note that Steve must be holding a sword for him to actually 'hit'.  If he's
+    holding a block, this function is equivalent to `place()`.
+    '''
     place(*args, **kwargs)
 
 def toggle_fly_mode():
+    '''Toggle fly mode.  Simulates two `jump()`s.'''
     for i in range(2):
         jump(duration=MIN_DURATION_PRESS)
         time.sleep(MIN_DURATION_PRESS)
 
 def item(choice):
+    '''Select an item.  Simulates a `key_press()` of `1` thru `8` (the `choice`).
+
+    `choice` is the number of the item (shown on the bar at the bottom of the
+    Minecraft window).
+    '''
     if not (1 <= choice <= 8):
         raise ValueError('choice must be from 1 to 8')
     key_press(item_keys[choice-1], duration=MIN_DURATION_PRESS)
 
 def enter():
+    '''Simulates a `key_press()` of the ENTER key.
+
+    Can be useful to select an item in the inventory.'''
     key_press(uinput.KEY_ENTER, duration=MIN_DURATION_PRESS)
 
 def inventory():
+    '''Open Steve's inventory.  Simulates a `key_press()` of `E`.'''
     key_press(uinput.KEY_E, duration=MIN_DURATION_PRESS)
 
 def look(left=0, right=0, up=0, down=0):
+    '''Look around - simulate a mouse movement.
+
+    Looks left/right/up/down the integer amount given.  The integer represents
+    the amount of incremental mouse movement.
+    '''
     device.emit(uinput.REL_X, int(right-left), syn=False)
     device.emit(uinput.REL_Y, int(down-up))
 
@@ -185,6 +259,32 @@ def _make_platform(mc, erase=False, height=58, half_width=3):
     return Vec3(0, height+1, 0)
 
 def get_heading(mc):
+    '''Get the heading (compass direction) that Steve is facing.
+
+    `mc` is the Minecraft object (returned by `minecraft.Minecraft.create()`).
+
+    Returns the angle (in degrees) from the z-axis (i.e., when facing the
+    z-axis, the angle is zero).  The angle increases counter-clockwise when the
+    ground is viewed from above.  The angle is from -180 to 180 degress.
+
+    The Minecraft application does not provide any way to directly get the
+    heading, so this function uses some tricks that have their own quirks.  The
+    heading is determined by:
+
+     - Transporting Steve to a platform high above the world.  The platform is
+       covered, so when Steve gets there, it'll be dark.
+     - Have Steve walk forward a short distance.
+     - Use Steve's starting point and end point to determine the heading.
+
+    Some quirks of using the above method:
+
+     - The Minecraft world will go black (it's dark) while running the above
+       procedures.
+     - If Steve is looking around or moving while getting the heading, the
+       computed heading can be way off.
+     - The platform is created far above the world, but if there are other
+       blocks already there, they will be erased.
+    '''
     original_pos = mc.player.getPos()
     center_of_platform = _make_platform(mc)
 
@@ -218,10 +318,46 @@ def _sphere(mc, origin, radius, blk):
         _circle(mc, origin + Vec3(0,delta_y,0), sqrt(radius**2 - delta_y**2), blk)
 
 def get_direction(mc):
+    '''Get the direction (in 3 dimensions) that Steve is facing.
+
+    `mc` is the Minecraft object (returned by `minecraft.Minecraft.create()`).
+
+    Steve must be holding the sword for this function to work correctly.
+
+    Returns the direction, `(theta, phi)`, from a spherical coordinate
+    system.  `theta` is the angle from the z-axis (equivalent to the angle
+    returned from `get_heading()`, from -180 to 180 degress.  `phi` is the
+    angle looking up/down (from -90 to 90 degrees), where -90 is looking
+    straight down, 0 is looking level, and 90 is looking straight up.
+
+    The Minecraft application does not provide any way to directly get the
+    direction, so this function uses some tricks that have their own quirks.
+    The direction is determined by:
+
+     - Transporting Steve to the center of a sphere high above the world.  The
+       sphere is completely enclosed, so when Steve gets there, it'll be dark.
+     - Have Steve hit one of the blocks of the sphere.
+     - Using `pollBlockHits()`, record which block Steve hit.  Using a little
+       trigonometry, we can determine the direction he is facing.
+
+    Some quirks of using the above method:
+
+     - It's not nearly as accurate as `get_heading()`.  It's limited because
+       Steve can only 'hit' blocks that are close to him.
+     - The Minecraft world will go black (it's dark) while running the above
+       procedures.
+     - If Steve is looking around or moving while getting the direction, the
+       computed direction can be way off.
+     - The sphere is created far above the world, but if there are other
+       blocks already there, they will be erased.
+     - Because it uses `pollBlockHits()`, Steve must be holding the sword for
+       this function to work correctly.  You'll notice Steve finish swinging
+       his sword right after he returns from the darkness.
+    '''
     origin = Vec3(0,58,0)
     radius = 3.9
     box_offset = Vec3(radius+1, radius+1, radius+1)
-    mc.setBlocks(origin - box_offset, origin + box_offset, block.GLASS)
+    mc.setBlocks(origin - box_offset, origin + box_offset, block.STONE)
     _sphere(mc, origin, radius, block.AIR)
     mc.setBlocks(origin, origin + Vec3(0, radius, 0), block.AIR)
     mc.setBlock(origin + Vec3(0, -2, 0), block.STONE)
@@ -248,4 +384,25 @@ def get_direction(mc):
 __all__ = [
     'show',
     'hide',
+    'key_release',
+    'key_press',
+    'backward',
+    'forward',
+    'left',
+    'right',
+    'jump',
+    'crouch',
+    'ascend',
+    'descend',
+    'stop',
+    'smash',
+    'place',
+    'hit',
+    'toggle_fly_mode',
+    'item',
+    'enter',
+    'inventory',
+    'look',
+    'get_heading',
+    'get_direction',
     ]

@@ -1,3 +1,10 @@
+"""
+The main Minecraft module - contains classes for manipulating the camera view,
+player, and in particular the Minecraft world via the Minecraft class.  The
+Minecraft class provides functions for getting and setting blocks, posting chat
+messages, saving/restoring checkpoints, and more.
+"""
+
 from .connection import Connection
 from .vec3 import Vec3
 from .event import BlockEvent

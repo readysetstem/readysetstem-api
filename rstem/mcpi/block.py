@@ -1,3 +1,7 @@
+"""
+Provides all of the Block constants (e.g. AIR, STONE, BRICK)
+"""
+
 class Block:
     """Minecraft PI block description. Can be sent to Minecraft.setBlock/s"""
     def __init__(self, id, data=0):
