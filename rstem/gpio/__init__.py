@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 '''
-This module provides interfaces to GPIOs - useful for the lighting LEDs in the I/O RaspberrySTEM
-Cell, and other RaspberrySTEM Cells.
+This module provides interfaces to GPIOs - useful for the lighting LEDs in the I/O Ready Set STEM
+Cell, and other Ready Set STEM Cells.
 '''
 
 import os
@@ -130,7 +130,7 @@ class Output(Pin):
     def __init__(self, pin, active_low=True):
         '''Create a new `Output`.
 
-        `pin` is the number of the GPIO as labeled on the RaspberrySTEM Lid
+        `pin` is the number of the GPIO as labeled on the Ready Set STEM Lid
         connector.  It is the GPIO number used by the Broadcom processor on
         the Raspberry Pi.
 
@@ -172,7 +172,7 @@ class Input(Pin):
     def __init__(self, pin, active_low=False, pull=PULL_DISABLE):
         '''Create a new `Input`.
 
-        `pin` is the number of the GPIO as labeled on the RaspberrySTEM Lid
+        `pin` is the number of the GPIO as labeled on the Ready Set STEM Lid
         connector.  It is the GPIO number used by the Broadcom processor on
         the Raspberry Pi.
 

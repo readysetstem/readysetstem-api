@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 '''
-This module provides interfaces to the Accelerometer RaspberrySTEM Cell.  The
-Accelerometer allows a program to detemine which way the RaspberrySTEM is
+This module provides interfaces to the Accelerometer Ready Set STEM Cell.  The
+Accelerometer allows a program to detemine which way the Ready Set STEM is
 tilted and/or moving.
 '''
 
@@ -201,7 +201,7 @@ class Accel(object):
         the gravitational force of the Earth.  An object in free-fall will
         measure 0 `g` in the direction that it is falling.  An object resting
         on a table will measure 1 `g` in the downward direction.  Thus, if the
-        RaspberrySTEM is sitting flat and upright on a table, the return value
+        Ready Set STEM is sitting flat and upright on a table, the return value
         should be close to (0.0, 0.0, 1.0).
         '''
         # Verify data is ready

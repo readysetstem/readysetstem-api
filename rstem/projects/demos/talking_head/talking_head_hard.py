@@ -21,7 +21,7 @@ SELECT = 22
 soundboard = {
     button.Button(A) : speaker.Speech("Hello World"),
     button.Button(B) : speaker.Speech("How are you?"),
-    button.Button(UP) : speaker.Speech("RaspberrySTEM is super cool!"),
+    button.Button(UP) : speaker.Speech("Ready Set STEM is super cool!"),
     button.Button(DOWN) : speaker.Speech("The first 16 digits of pi is 3.141592653589793"),
     button.Button(LEFT) : speaker.Speech("Always bring a banana to a party!"),
     button.Button(RIGHT) : speaker.Speech("I'm sorry Dave, I'm afraid I can't do that."),

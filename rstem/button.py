@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 """
-This module provides interfaces to the buttons in the I/O RaspberrySTEM Cell.
+This module provides interfaces to the buttons in the I/O Ready Set STEM Cell.
 """
 
 from threading import Thread, Event
@@ -61,7 +61,7 @@ class Button(Input):
     def __init__(self, pin):
         """Create a new `rstem.button.Button`.
 
-        `pin` is the number of the GPIO as labeled on the RaspberrySTEM Lid
+        `pin` is the number of the GPIO as labeled on the Ready Set STEM Lid
         Connector Board.  It is the same as the GPIO number used by the
         Broadcom processor on the Raspberry Pi.
         """

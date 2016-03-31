@@ -237,7 +237,6 @@ while True:
         from random import shuffle, randint
         words = ["Brian", "Jason", "Jon", "Joe", "Steph", "Jed", "Tess"]
         shuffle(words)
-        raspberrySTEM = "RaspberrySTEM"
         for name in words:
             sprite = led_matrix.LEDText(name, font_name="large")
             y_pos = randint(0,led_matrix.height()-sprite.height)
@@ -249,7 +248,7 @@ while True:
                 x_pos -= 1
                 time.sleep(.05)
         
-        logo = led_matrix.LEDText(raspberrySTEM, font_name="large")
+        logo = led_matrix.LEDText("Ready Set STEM", font_name="large")
         y_pos = int(led_matrix.height()/2) - int(logo.height/2)
         x_pos = led_matrix.width()
         while x_pos >= -logo.width:

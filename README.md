@@ -1,4 +1,4 @@
-raspberrystem
-=============
+readysetstem
+============
 
-RaspberrySTEM Educational and Hobbyist Development Kit based on the Raspberry Pi
+Rady Set STEM API

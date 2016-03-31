@@ -22,7 +22,7 @@ TEST_SOUND_REL_PATH='match5.wav'
 
 @testing.automatic
 def sound_dir_test():
-    return sound_dir() == '/opt/raspberrystem/sounds'
+    return sound_dir() == '/opt/readysetstem/sounds'
 
 @testing.automatic
 def sound_dir_list_is_long():

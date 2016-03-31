@@ -138,7 +138,7 @@ host-clean:
 #
 # Projects repo
 #
-DOC_REPO=../raspberrystem-projects
+DOC_REPO=../readysetstem-projects
 
 ifeq ($(wildcard $(DOC_REPO)),)
 projects projects-%:
@@ -156,7 +156,7 @@ endif
 #
 # IDE repo
 #
-IDE_REPO=../raspberrystem-ide
+IDE_REPO=../readysetstem-ide
 
 ifeq ($(wildcard $(IDE_REPO)),)
 ide ide-%:

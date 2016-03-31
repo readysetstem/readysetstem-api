@@ -8,7 +8,7 @@ import testing
 from functools import partial
 from bs4 import BeautifulSoup
 
-PRJ_PATH = '/opt/raspberrystem/projects/'
+PRJ_PATH = '/opt/readysetstem/projects/'
 
 def read_project_html(html_filename_notext):
     with open(PRJ_PATH + html_filename_notext + '.html') as f:

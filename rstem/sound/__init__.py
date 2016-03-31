@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 '''
-This module provides interfaces to the RaspberrySTEM CREATOR Kit speaker.
+This module provides interfaces to the Ready Set STEM CREATOR Kit speaker.
 
 Additionally, it can be used for any audio out over the analog audio jack.
 '''
@@ -46,9 +46,9 @@ import socket
 STOP, PLAY, FLUSH, STOPPING = range(4)
 CHUNK_BYTES = 1024
 SOUND_CACHE = '/home/pi/.rstem_sounds'
-SOUND_DIR = '/opt/raspberrystem/sounds'
+SOUND_DIR = '/opt/readysetstem/sounds'
 MIXER_EXE_BASENAME = 'rstem_mixer'
-MIXER_EXE_DIRNAME = '/opt/raspberrystem/bin'
+MIXER_EXE_DIRNAME = '/opt/readysetstem/bin'
 MIXER_EXE = os.path.join(MIXER_EXE_DIRNAME, MIXER_EXE_BASENAME)
 SERVER_PORT = 8888
 
@@ -259,7 +259,7 @@ class BaseSound(object):
     def volume(self):
         '''The volume of the sound object
         
-        Each sound object has an volume (idpendent of the `master_volume()`),
+        Each sound object has an volume (independent of the `master_volume()`),
         between 0 (muted) and 100 (loudest).
 
         The volume is readable/writeable.

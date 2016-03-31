@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 '''
-This module provides interfaces to the LED Matrix RaspberrySTEM Cell.
+This module provides interfaces to the LED Matrix Ready Set STEM Cell.
 '''
 
 
@@ -280,7 +280,7 @@ class Text(Sprite):
         return font_path
 
 class FrameBuffer(object):
-    ''' A framebuffer that maps to a chain of LED Matrix RaspberrySTEM Cells.  
+    ''' A framebuffer that maps to a chain of LED Matrix Ready Set STEM Cells.  
     
     The LED Matrices are connected over the SPI bus.  The `FrameBuffer` object
     provides a set of functions for drawing on the framebuffer, and for

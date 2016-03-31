@@ -13,12 +13,12 @@ for SRC in ./util/bin/*.sbin; do
 done
 
 # Install all other bins in /opt
-mkdir -p /opt/raspberrystem/bin
-cp ./util/bin/* /opt/raspberrystem/bin
-chmod 755 /opt/raspberrystem/bin/*
+mkdir -p /opt/readysetstem/bin
+cp ./util/bin/* /opt/readysetstem/bin
+chmod 755 /opt/readysetstem/bin/*
 
 # Copy udev rule to correct place
-cp ./pkg/90-raspberrystem.rules /etc/udev/rules.d/90-raspberrystem.rules
+cp ./pkg/90-readysetstem.rules /etc/udev/rules.d/90-readysetstem.rules
 
 # Set up SPI, I2C, etc...  Taken from http://github.com/asb/raspi-config
 CONFIG=/boot/config.txt
@@ -54,8 +54,8 @@ done
 # Create a sounds directory (and fill it with links to Raspbian sounds
 #
 echo "Create links to default Raspbian sounds..."
-mkdir -p /opt/raspberrystem/sounds
-chmod 777 /opt/raspberrystem/sounds
+mkdir -p /opt/readysetstem/sounds
+chmod 777 /opt/readysetstem/sounds
 SOUND_DIRS=(
     /opt/sonic-pi/etc/samples
     /usr/share/scratch/Media/Sounds
@@ -63,10 +63,10 @@ SOUND_DIRS=(
     /home/pi/python_games
     )
 find "${SOUND_DIRS[@]}" \( -name "*.wav" -o -name "*.mp3" \) \
-    -exec sh -c 'ln -sf "{}" "/opt/raspberrystem/sounds/$(basename "{}")"' \;
+    -exec sh -c 'ln -sf "{}" "/opt/readysetstem/sounds/$(basename "{}")"' \;
 # Create names for sounds used in the projects guide
-ln -sf badswap.wav /opt/raspberrystem/sounds/hit.wav
-ln -sf match1.wav /opt/raspberrystem/sounds/fire.wav
+ln -sf badswap.wav /opt/readysetstem/sounds/hit.wav
+ln -sf match1.wav /opt/readysetstem/sounds/fire.wav
 echo "...done"
 
 #
