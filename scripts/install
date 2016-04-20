@@ -1,6 +1,13 @@
 sudo apt-get update -y
-sudo apt-get install -y python3-pip libi2c-dev sox libsox-fmt-mp3 espeak chromium
+sudo apt-get install -y python3-pip 
+sudo apt-get install -y libi2c-dev
+sudo apt-get install -y sox
+sudo apt-get install -y libsox-fmt-mp3
+sudo apt-get install -y espeak
+sudo apt-get install -y chromium
 sudo apt-get install -y libasound2-dev
-sudo pip-3.2 install pdoc
+sudo apt-get install -y libudev-dev
+sudo apt-get install -y xdotool
+sudo apt-get install -y wmctrl
 sudo pip-3.2 install readysetstem-api readysetstem-ide readysetstem-projects
 
