@@ -1,0 +1,8 @@
+#
+# Usage: source ./setup <file.py>
+#
+scp $1 pi@raspberrypi:
+pi sudo ln -sf /home/pi/launch /opt/readysetstem/ide/launch 
+pi echo python3 $1 \> launch
+pi sudo reboot
+
