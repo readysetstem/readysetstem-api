@@ -16,6 +16,8 @@ wrong_tts = Speech("Oops!")
 correct_tts = Speech("Correct!")
 try_again_tts = Speech("Try again another time!")
 
+actions_tts = [no_action_tts, tilt_left_tts, tilt_right_tts, tilt_up_tts, shake_me_tts]
+
 accel = Accel()
 
 NOACTION = 0
@@ -24,20 +26,19 @@ RIGHT = 2
 UP = 3
 SHAKE = 4
 
-actions_tts = [no_action_tts, tilt_left_tts, tilt_right_tts, tilt_up_tts, shake_me_tts]
-
 # Ready to play?
 SCORE_NEEDED = 10
 period = 300
 ready_tts.play().wait()
 while True:
     request = random.randint(1,4)
+    action = NOACTION
     actions_tts[request].play().wait()
+
     tilt_left_score = 0
     tilt_right_score = 0
     tilt_up_score = 0
     shake_me_score = 0
-    action = NOACTION
     for i in range(period):
         x, y, z = accel.forces()
         if x < -0.75:
@@ -65,10 +66,10 @@ while True:
         time.sleep(0.01)
 
     if request == action:
-        # Yes!
+        # Correct action performed!
         correct_tts.play().wait()
     else:
-        # No - let user know what we detected
+        # Timeout - let user know what we detected
         wrong_tts.play().wait()
         detect_tts.play().wait()
         actions_tts[action].play().wait()

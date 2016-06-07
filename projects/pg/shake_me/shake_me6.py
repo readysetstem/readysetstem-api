@@ -5,15 +5,19 @@ accel = Accel()
 
 NOACTION = 0
 LEFT = 1
+RIGHT = 2
+UP = 3
+SHAKE = 4
 
 # Ready to play?
 SCORE_NEEDED = 10
 period = 300
 while True:
     request = LEFT
-    print(request)
-    tilt_left_score = 0
     action = NOACTION
+    print(request)
+
+    tilt_left_score = 0
     for i in range(period):
         x, y, z = accel.forces()
         if x > 0.75:
