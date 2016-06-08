@@ -37,10 +37,10 @@ spaceship = Sprite('''
 spaceship_middle = 2
 spaceship_position = fb.width / 2
 TILT_FORCE = 0.1
-SPACESHIP_STEP = 0.3
+SPACESHIP_STEP = 1
 
 # Initialize aliens
-alien_columns = [i for i in range(35) if i % 3]
+alien_columns = [i for i in range(24) if i % 3]
 alien_row = fb.height - 1
 alien_start_time = time.time()
 alien_direction = 1
@@ -93,9 +93,9 @@ while True:
 
     # Move spaceship
     if x_force > TILT_FORCE:
-        spaceship_position -= SPACESHIP_STEP
+        spaceship_position -= SPACESHIP_STEP * x_force
     elif x_force < -TILT_FORCE:
-        spaceship_position += SPACESHIP_STEP
+        spaceship_position -= SPACESHIP_STEP * x_force
     spaceship_position = max(0, min(fb.width - 1, spaceship_position))
 
     # Move alien
@@ -105,7 +105,7 @@ while True:
         alien_at_left_side = alien_direction < 0 and min(alien_columns) == 0
         if alien_at_left_side or alien_at_right_side:
             alien_row -= 1
-            alien_speed *= 1.3
+            alien_speed *= 1.2
             alien_direction = - alien_direction
             if alien_row == 0:
                 break
