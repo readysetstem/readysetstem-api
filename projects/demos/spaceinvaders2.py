@@ -41,7 +41,8 @@ SPACESHIP_STEP = 1
 
 # Initialize aliens
 alien_columns = [i for i in range(24) if i % 3]
-alien_row = fb.height - 1
+alien_columns2 = [i for i in range(24) if i % 3]
+alien_row = fb.height - 6
 alien_start_time = time.time()
 alien_direction = 1
 alien_speed = 1
@@ -103,7 +104,9 @@ while True:
         next(notes).play(duration=0.20)
         alien_at_right_side = alien_direction > 0 and max(alien_columns) == fb.width - 1
         alien_at_left_side = alien_direction < 0 and min(alien_columns) == 0
-        if alien_at_left_side or alien_at_right_side:
+        alien_at_right_side2 = alien_direction > 0 and max(alien_columns2) == fb.width - 1
+        alien_at_left_side2 = alien_direction < 0 and min(alien_columns2) == 0
+        if alien_at_left_side or alien_at_right_side or alien_at_left_side2 or alien_at_right_side2:
             alien_row -= 1
             alien_speed *= 1.2
             alien_direction = - alien_direction
@@ -111,6 +114,7 @@ while True:
                 break
         else:
             alien_columns = [column + alien_direction for column in alien_columns]
+            alien_columns2 = [column + alien_direction for column in alien_columns2]
         alien_start_time = now
 
     # Check for collision
@@ -119,11 +123,14 @@ while True:
         if missile_y == alien_row and missile_x in alien_columns:
             alien_columns.remove(missile_x)
             hit_sound.play()
+        elif missile_y == alien_row - 1 and missile_x in alien_columns2:
+            alien_columns2.remove(missile_x)
+            hit_sound.play()
         else:
             new_missiles.append((missile_x, missile_y))
     missiles = new_missiles
 
-    if not alien_columns:
+    if not alien_columns and not alien_columns2:
         break
 
     # ########################################
@@ -144,12 +151,14 @@ while True:
     # Draw aliens
     for column in alien_columns:
         fb.point(column, alien_row)
+    for column in alien_columns2:
+        fb.point(column, alien_row-1)
 
     # Show FrameBuffer on LED Matrix
     fb.show()
     time.sleep(0.001)
 
-if alien_columns:
+if alien_columns or alien_columns2:
     print("Ouch!")
 else:
     print("You win!")
