@@ -9,5 +9,5 @@ sudo apt-get install -y libasound2-dev
 sudo apt-get install -y libudev-dev
 sudo apt-get install -y xdotool
 sudo apt-get install -y wmctrl
-sudo pip-3.2 install readysetstem-api readysetstem-ide readysetstem-projects
+sudo pip3 install readysetstem-api readysetstem-ide readysetstem-projects
 

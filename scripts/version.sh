@@ -1,4 +1,4 @@
 #!/bin/bash
-echo readysetstem > NAME
+echo readysetstem_api > NAME
 git describe --tags --dirty > VERSION
 
