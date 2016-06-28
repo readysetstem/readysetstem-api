@@ -60,6 +60,11 @@ def start_server():
     # start server (if it is not already running)
     shell_cmd('pgrep -c {} || {} &'.format(MIXER_EXE_BASENAME, MIXER_EXE))
 
+    # Force audio to always come out of the analog audio jack.  Some HDMI
+    # monitors will cause the audio auto detect to set sound out of HDMI even
+    # the connected monitor has no sound (or disabled sound)
+    shell_cmd('amixer cset numid=3 1')
+
     # Wait until server is up
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     for tries in range(30):
