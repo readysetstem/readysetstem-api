@@ -1,13 +1,47 @@
+#!/bin/bash
+#
+# readysetstem install scrtipt
+#
+# Copyright 2016, Ready Set STEM
+#
+if [ -z "$BASH" ]; then 
+    echo 'Requires bash shell.  Use "bash '"$0"'".'
+    exit 1
+fi
+
+install_chromium() {
+    # If chromium pkg is not available, install from ubuntu.com packages
+    if ! sudo apt-get install -y chromium; then
+        if ! sudo apt-get install -y chromium-browser; then
+            URL="http://ports.ubuntu.com/pool/universe/c/chromium-browser/"
+            VER="48.0.2564.82-0ubuntu0.15.04.1.1193"
+            FILES=(
+                chromium-codecs-ffmpeg-extra_${VER}_armhf.deb
+                chromium-browser_${VER}_armhf.deb
+                chromium-browser-l10n_${VER}_all.deb
+                )
+            for f in "${FILES[@]}"; do
+                wget -r "${URL}${f}"
+                sudo dpkg -i "${f}"
+            done
+
+            sudo ln -sf `which chromium-browser` /usr/bin/chromium
+        fi
+    fi
+}
+
 sudo apt-get update -y
+
 sudo apt-get install -y python3-pip 
 sudo apt-get install -y libi2c-dev
 sudo apt-get install -y sox
 sudo apt-get install -y libsox-fmt-mp3
 sudo apt-get install -y espeak
-sudo apt-get install -y chromium
 sudo apt-get install -y libasound2-dev
 sudo apt-get install -y libudev-dev
 sudo apt-get install -y xdotool
 sudo apt-get install -y wmctrl
+install_chromium
+
 sudo pip3 install readysetstem-api readysetstem-ide readysetstem-projects
 
