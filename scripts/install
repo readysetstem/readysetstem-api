@@ -20,12 +20,16 @@ install_chromium() {
                 chromium-browser_${VER}_armhf.deb
                 chromium-browser-l10n_${VER}_all.deb
                 )
+            TMPDIR=$(mktemp -d)
+            pushd $TMPDIR
             for f in "${FILES[@]}"; do
-                wget -r "${URL}${f}"
+                wget "${URL}${f}"
                 sudo dpkg -i "${f}"
             done
+            popd
+            rm -rf $TMPDIR
 
-            sudo ln -sf `which chromium-browser` /usr/bin/chromium
+            sudo ln -sf $(which chromium-browser) /usr/bin/chromium
         fi
     fi
 }
