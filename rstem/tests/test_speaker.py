@@ -61,8 +61,7 @@ def sound_short_latency():
 
 @testing.automatic
 def sound_stop_time():
-    #s = Sound(TEST_SOUND_LONG)
-    s = Sound('/opt/sonic-pi/etc/samples/loop_garzul.wav')
+    s = Sound(TEST_SOUND_LONG)
     s.play()
     time.sleep(1)
     start = time.time()
