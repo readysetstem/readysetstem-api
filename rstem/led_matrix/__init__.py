@@ -23,13 +23,13 @@ import os
 import re
 import time
 from . import led_driver     # c extension that controls led matrices and contains framebuffer
+from .. import gpio
 import copy
 import subprocess
 from itertools import islice
 
 MAX_MATRICES = 64
 MATRIX_SPI_SHIFT_REGISTER_LENGTH=32
-SPI_SPEED=250000
 width = 0    #: The width of the LED matrix grid
 height = 0   #: The height of the LED matrix grid
 
@@ -300,7 +300,14 @@ class FrameBuffer(object):
     15 is the highest brightness.
     '''
 
-    def __init__(self, matrix_layout=None, spi_port=0):
+    #
+    # Chip enable now controlled manually outside of SPI led_driver.  See
+    # led_driver for details.
+    #
+    SPI_CE0_PIN = 8
+    chip_enable = gpio.Output(SPI_CE0_PIN)
+
+    def __init__(self, matrix_layout=None):
         ''' Initialize the `rstem.led_matrix.FrameBuffer`.  
         
         If `matrix_layout` is not given (the default), then the LED Matrix
@@ -349,10 +356,10 @@ class FrameBuffer(object):
         if the correct number of LED Matrices is not actually hooked up
         (however, not all of the framebuffer data will necessarily be displayed).
 
-        The `spi_port` defines which SPI CE is used: 0 for CE0, 1 for CE1.
+        SPI CE0 is always used.
         '''
         if not matrix_layout:
-            num_matrices = self.detect(spi_port)
+            num_matrices = self.detect()
             if num_matrices == 0:
                 raise IOError('No LED Matrices connected')
             elif num_matrices > 8:
@@ -382,7 +389,7 @@ class FrameBuffer(object):
 
         self.matrix_layout = matrix_layout
         self.fb = [[0]*(maxy + 8) for i in range(maxx + 8)]
-        led_driver.init_spi(SPI_SPEED, spi_port)
+        led_driver.init_spi()
 
     def _framebuffer(self):
         return self.fb
@@ -493,16 +500,18 @@ class FrameBuffer(object):
             even = flat[::2]
             odd = flat[1::2]
             bitstream += bytes(b[0] | (b[1] << 4) for b in zip(even, odd))
+        FrameBuffer.chip_enable.on()
         led_driver.send(bitstream)
+        FrameBuffer.chip_enable.off()
 
     @staticmethod
-    def detect(spi_port=0):
+    def detect():
         '''Returns the number of matrices connected.  
         
         Requires matrices connected in a full chain from MOSI back to MISO on
         the Raspberry Pi.
         '''
-        led_driver.init_spi(SPI_SPEED, spi_port)
+        led_driver.init_spi()
 
         # Matrix chain forms one long shift-register, of N * B, where N is the
         # number of matrices, and B is the length of the shift-register in each
@@ -513,7 +522,9 @@ class FrameBuffer(object):
         # through the chain.
         rand = os.urandom(32)
         sequence = rand + bytes(MAX_MATRICES * MATRIX_SPI_SHIFT_REGISTER_LENGTH)
+        FrameBuffer.chip_enable.on()
         recv = led_driver.send(sequence)
+        FrameBuffer.chip_enable.off()
 
         # Search the received bytes for the random sequence.  The offset
         # determines the number of matrices in the chain

@@ -1,7 +1,7 @@
 /*
  * led_driver.c
  *
- * Copyright (c) 2014, Scott Silver Labs, LLC.
+ * Copyright (c) 2016, Ready Set STEM
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * This code originally used the SPI testing utility included with Linux as a
- * reference.
  */
-
-
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +22,21 @@
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
-#define MAX_MATRICES 50
+//
+// The SPI speed/delay are critical parameters, determined by the maximum that
+// the LED Matrix can handle.  The LED Matrix runs at 8MHz, and has to retrieve
+// each byte via code before the next one comes in, so it requires some time
+// between bytes.
+//
+// The timing is affected by both the SPI clock speed, and the delay between
+// bytes.  Testing shows that we can run up to 2MHz with a 2 usec delay.  The
+// parameters below include a safety margin.
+//
+// See rw_bytes() for more info.
+//
+#define MATRIX_SPI_SHIFT_REGISTER_LENGTH 32
+#define SPI_SPEED 500000
+#define SPI_DELAY 5 
 
 int spi;
 unsigned char spi_mode;
@@ -37,21 +46,27 @@ unsigned int spi_speed;
 
 // SPI  =============================================
 
-int start_spi(unsigned long speed, int mode){
-    char *sMode;
+int start_spi(void) {
+    int err;
+    char * device;
+
     if (spi) {
         close(spi);
     }
-    if(mode == 0){
-        sMode = "/dev/spidev0.0";
-    } else {
-        sMode = "/dev/spidev0.1";
-    }
-    int err;
+
+    //
+    // CE0 is handled manually via GPIO (outside of this function).  Therefore,
+    // we use a hack: we run on the CE1 device, but we don't use CE1.  That
+    // does mean CE1 will be wigglin' away, but it is unused.
+    //
+    // See also rw_bytes()
+    //
+    device = "/dev/spidev0.1";
+
     spi_mode = SPI_MODE_0;
     bits_per_trans = 8;
-    spi_speed = speed;
-    spi = open(sMode, O_RDWR);
+    spi_speed = SPI_SPEED;
+    spi = open(device, O_RDWR);
 
     err = ioctl(spi, SPI_IOC_WR_MODE, &spi_mode);
     if (err < 0) goto out;
@@ -72,12 +87,33 @@ out:
 }
 
 int rw_bytes(int dev, char * val, char * buff, int len){
-    struct spi_ioc_transfer tr = {
-        .tx_buf = (unsigned long)val,
-        .rx_buf = (unsigned long)buff,
-        .len = len
-    };
-    int ret = ioctl(dev, SPI_IOC_MESSAGE(1), &tr);
+    struct spi_ioc_transfer tr[MATRIX_SPI_SHIFT_REGISTER_LENGTH];
+    int i, j;
+    int ret = 0;
+
+    //
+    // SPI transfers are done in blocks of MATRIX_SPI_SHIFT_REGISTER_LENGTH at
+    // a time.  We do transfers of one byte each, as this is the only way to
+    // include an inter-byte delay (see SPI_DELAY).  We do just
+    // MATRIX_SPI_SHIFT_REGISTER_LENGTH at a time, because the largest
+    // transfers would exceed the ioctl() capability (so we break it into
+    // MATRIX_SPI_SHIFT_REGISTER_LENGTH chunks).
+    //
+    // Final note: because CE0 is at the mercy of the driver, and the LED
+    // Matrices require CE0 active for the full transaction (the end of CE0
+    // indicates when to show the framebuffer on the display), CE0 is handled
+    // manually outside of this driver.
+    //
+    for (i = 0; i < len; i += MATRIX_SPI_SHIFT_REGISTER_LENGTH) {
+        memset(tr, 0, sizeof(tr));
+        for (j = 0; j < MATRIX_SPI_SHIFT_REGISTER_LENGTH; j++) {
+            tr[j].tx_buf = (unsigned long) &val[i+j];
+            tr[j].rx_buf = (unsigned long) &buff[i+j];
+            tr[j].len = 1;
+            tr[j].delay_usecs = SPI_DELAY;
+        }
+        ret = ioctl(dev, SPI_IOC_MESSAGE(MATRIX_SPI_SHIFT_REGISTER_LENGTH), tr);
+    }
     return ret;
 }
 
@@ -85,14 +121,8 @@ int rw_bytes(int dev, char * val, char * buff, int len){
 
 
 static PyObject *py_init_spi(PyObject *self, PyObject *args){
-    unsigned int speed;
-    int mode;
     int ret;
-    if(!PyArg_ParseTuple(args, "ki", &speed, &mode)){
-        PyErr_SetString(PyExc_TypeError, "Not an unsigned long and int!");
-        return NULL;
-    }
-    ret = start_spi(speed, mode);
+    ret = start_spi();
     if (ret < 0) {
         PyErr_SetString(PyExc_IOError, "Failed to init SPI port.");
         return NULL;
@@ -107,8 +137,12 @@ static PyObject *py_send(PyObject *self, PyObject *args){
         PyErr_SetString(PyExc_TypeError, "Not an unsigned int!");
         return NULL;
     }
+    if (len % MATRIX_SPI_SHIFT_REGISTER_LENGTH) {
+        PyErr_SetString(PyExc_IOError, "Failed to read/write LED Matrices via SPI (bad len).");
+        return NULL;
+    }
     if (rw_bytes(spi, s, s, len) < 0) {
-        PyErr_SetString(PyExc_IOError, "Failed to read/write LED Matrices via SPI.");
+        PyErr_SetString(PyExc_IOError, "Failed to read/write LED Matrices via SPI (bad IO).");
         return NULL;
     }
     return Py_BuildValue("y#", s, len);
