@@ -475,12 +475,15 @@ def input_pull_up_via_configure():
 def input_pull_disable_via_configure():
     return input_pull_test(PULL_DISABLE, stayed_on=True, stayed_off=True, configure=True)
     
-@testing.automatic
+@testing.debug
 def board_rev():
     # Verify board_family is Raspberry Pi 2
     rev = Output.board_rev()
     known = rev in [0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 
-                    0x000d, 0x000e, 0x000f, 0x0010, 0x0011, 0x0012, 0x1041]
+                    0x000d, 0x000e, 0x000f, 0x0010, 0x0011, 0x0012, 
+                    0x1041, # Pi 2
+                    0x2082, # Pi 3
+                    ]
     print("Board rev: 0x{:04x}".format(rev))
     if not known:
         print("Board is not known.  Some tests may fail.")
