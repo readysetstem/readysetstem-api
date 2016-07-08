@@ -315,12 +315,12 @@ def action_place_item():
     # Place bottom block
     slow_look(down=300)
     control.item(2) # Cobblestone
-    control.place()
+    control.place(0.1)
 
     # Place top block
     slow_look(up=150)
     control.item(5) # Dirt
-    control.place()
+    control.place(0.1)
 
     # Verify blocks
     bottom_block = mc.getBlock(BOX_MIDDLE_TILE, 1, BOX_MIDDLE_TILE+1)
@@ -421,9 +421,9 @@ def action_smash():
     '''
     mc = mc_create()
     control.item(2) # Cobblestone
-    control.place()
+    control.place(0.1)
     block_before = mc.getBlock(BOX_MIDDLE_TILE, 2, BOX_WIDTH)
-    control.smash()
+    control.smash(0.1)
     block_after = mc.getBlock(BOX_MIDDLE_TILE, 2, BOX_WIDTH)
     print("Block Before:", block_before)
     print("Block After:", block_after)
@@ -457,7 +457,7 @@ def action_inventory():
     inventory_move(control.right, 3)
     inventory_move(control.backward, 1)
     control.enter()
-    control.place()
+    control.place(0.1)
 
     # Select and place SNOW_BLOCK
     control.inventory()
@@ -466,7 +466,7 @@ def action_inventory():
     inventory_move(control.right, 9)
     inventory_move(control.backward, 3)
     control.enter()
-    control.place()
+    control.place(0.1)
 
     block_1 = mc.getBlock(BOX_MIDDLE_TILE, 2, BOX_WIDTH)
     block_2 = mc.getBlock(BOX_MIDDLE_TILE, 2, BOX_WIDTH-1)
