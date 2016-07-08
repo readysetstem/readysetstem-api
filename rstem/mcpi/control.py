@@ -56,6 +56,7 @@ keys = [
     uinput.KEY_SPACE,
     uinput.KEY_ENTER,
     uinput.KEY_LEFTSHIFT,
+    uinput.KEY_ESC,
     uinput.BTN_LEFT,
     uinput.BTN_RIGHT,
     uinput.REL_X,
@@ -79,6 +80,19 @@ def show(show=True, hide_at_exit=True):
     ret = shcall(SHOW_WIN_CMD if show else HIDE_WIN_CMD)
     if ret:
         raise IOError('Could not show/hide minecraft window.  Is it running?')
+
+    #
+    # When wmctrl activates the minecraft window, as of Jessie, it does not
+    # steal mouse focus.  To do that, we either have to hit escape, or click in
+    # the window.  We click ESC twice, to go back to the main menu and return
+    # to the game.
+    #
+    # A little hokie, but we don't have another reliable method.
+    #
+    time.sleep(0.25)
+    key_press(uinput.KEY_ESC, duration=0.01)
+    time.sleep(0.25)
+    key_press(uinput.KEY_ESC, duration=0.01)
 
     if hide_at_exit:
         def hide_ignoring_errors():
