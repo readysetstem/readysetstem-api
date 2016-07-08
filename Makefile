@@ -92,7 +92,7 @@ $(PYDOC_TAR): $(GIT_FILES) | $(OUT)
 	@# bundled into the package).  However, because pdoc runs on the target only,
 	@# we need to have an installed version of rstem on the target.  This a
 	@# catch-22.  So, we push a development version of the source to the target
-	@# (which doesn't require the API docs in the build via rstem-dev, and we
+	@# (which doesn't require the API docs in the build via rstem-dev), and we
 	@# undev it at the end.
 	$(MAKE) rstem-dev
 	$(RUNONPI) pdoc --overwrite --html --html-dir $(PYDOC_NAME) rstem
@@ -186,18 +186,25 @@ INSTALL_TARGETS=rstem ide projects
 UNINSTALL_TARGETS=$(INSTALL_TARGETS)
 UPLOAD_TARGETS=rstem ide projects
 
-clean: $(addsuffix -clean,$(CLEAN_TARGETS))
+all-clean: $(addsuffix -clean,$(CLEAN_TARGETS))
 	$(RUNONPI) "cd ~; sudo rm -rf ~/rsinstall"
 
-uninstall: $(addsuffix -uninstall,$(UNINSTALL_TARGETS))
+all-uninstall: $(addsuffix -uninstall,$(UNINSTALL_TARGETS))
 
-install: $(addsuffix -install,$(INSTALL_TARGETS))
+all-install: $(addsuffix -install,$(INSTALL_TARGETS))
 
-upload: $(addsuffix -upload,$(UPLOAD_TARGETS))
+all-upload: $(addsuffix -upload,$(UPLOAD_TARGETS))
 
 run: ide-run
 
 dev: rstem-dev
+undev: rstem-undev
+pydoc: rstem-pydoc
+register: rstem-register
+upload: rstem-upload
+uninstall: rstem-uninstall
+install: rstem-install
+clean: rstem-clean
 
 test:
 	@echo "What do you want to test?"
@@ -226,16 +233,16 @@ test-clean:
 
 help:
 	@echo "Usage: make <make-target>, where <make-target> is one of:"
-	@echo "rstem commands (use to make/install pip packages):"
-	@echo "    rstem               setup.py sdist - Create a pip installable source distribution"
-	@echo "    rstem-dev         * setup.py develop - Build/install on target for (fast) dev"
-	@echo "    rstem-undev       * setup.py develop --uninstall - Reverse of make rstem-dev"
-	@echo "    rstem-pydoc         Extract the pydocs into the rstem package"
-	@echo "    rstem-register      setup.py register - One-time user register/login on PyPI"
-	@echo "    rstem-upload        setup.py upload - Upload source distribution to PyPI"
-	@echo "    rstem-install     * pip install <tar.gz> - Install from source distribution"
-	@echo "    rstem-uninstall   * pip uninstall <NAME> - Uninstall"
-	@echo "    rstem-clean       * Remove all host and target rstem files"
+	@echo "rstem commands (use to make/install pip packages).  "rstem" is optional:"
+	@echo "    [rstem]             setup.py sdist - Create a pip installable source distribution"
+	@echo "    [rstem-]dev       * setup.py develop - Build/install on target for (fast) dev"
+	@echo "    [rstem-]undev     * setup.py develop --uninstall - Reverse of make rstem-dev"
+	@echo "    [rstem-]pydoc       Extract the pydocs into the rstem package"
+	@echo "    [rstem-]register    setup.py register - One-time user register/login on PyPI"
+	@echo "    [rstem-]upload      setup.py upload - Upload source distribution to PyPI"
+	@echo "    [rstem-]install   * pip install <tar.gz> - Install from source distribution"
+	@echo "    [rstem-]uninstall * pip uninstall <NAME> - Uninstall"
+	@echo "    [rstem-]clean     * Remove all host and target rstem files"
 	@echo ""
 	@echo "Doc commands (docs are in a separate git repo.  Skip if not found):"
 	@echo "    projects            Create HTML projects"
@@ -255,17 +262,15 @@ help:
 	@echo "    ide-clean         * Clean IDE"
 	@echo ""
 	@echo "Top-level commands:"
-	@echo "    [all]               make rstem, projects, ide"
-	@echo "    pi-setup          * One-time setup required on clean Raspbian install."
+	@echo "    all                 make rstem, projects, ide"
 	@echo "    test              * Run tests (TBD)"
 	@echo "    push              * Push changes on local computer onto pi"
 	@echo "    pull              * Pull changes on pi back to local onto pi (BE CARFEULL!!)"
-	@echo "    upload              make *-upload, and upload final binaries to <TBD>"
-	@echo "    install           * make *-install"
-	@echo "    uninstall         * make *-uninstall"
-	@echo "    clean             * make *-clean"
+	@echo "    all-upload          make *-upload, and upload final binaries to <TBD>"
+	@echo "    all-install       * make *-install"
+	@echo "    all-uninstall     * make *-uninstall"
+	@echo "    all-clean         * make *-clean"
 	@echo "    run               * make ide-run"
-	@echo "    dev               * make rstem-dev"
 	@echo ""
 	@echo " * Requires access to target Raspberry Pi"
 	@echo ""
