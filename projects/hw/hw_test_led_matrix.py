@@ -1,117 +1,93 @@
 from rstem.led_matrix import FrameBuffer, Text
+from rstem.gpio import Output
 import traceback
 import sys
 import time
 
-def failed(s, tb=False):
-    if tb:
-        print(traceback.format_exc())
-    print("ERROR: ", s)
-    print("TEST FAILED")
-    sys.exit()
-
-try:
-    fb = FrameBuffer([(0,0,-90),(8,0,-90),(8,8,-90)])
-except:
-    failed("FrameBuffer() could not be intialized", True)
-
-if FrameBuffer.detect() != 3:
-    failed("Should be exactly 3 LED Matrices attached")
-
-print("INFO: Three matrices found.")
-try:
-    for i in range(20):
-        if FrameBuffer.detect() != 3:
-            failed("Retesting detect() failure: Should be exactly 3 LED Matrices attached")
-except:
-    failed("Retesting detect() failure: exception caught", True)
-
-print("""
-Verify that the following sequence occurs:
-    - A, B, C is printed on the LEDs (1 second)
-    - All LEDs on (1 second)
-    - LEDs go from dim to bright (2 seconds)
-    - All LEDs go dark.
-    - UUT (B) shows horizontal bar go from bottom to top (1 second)
-    - UUT shows vertical bar go from left to right (1 second)
-    - UUT shows 1 quarter lit (upper left/right, then lower left/right) (1
-      second)
-    - UUT shows checkerboard with bottom left lit, then inverted checkerboard
-      (1.5 seconds)
-Any missing LEDs lit is a failure.
-
-Sequence repeats forever - hit CTRL-C to stop.
-""")
-
-input("Press Enter to start the test...")
-
-print("TEST SEQUENCE RUNNING - CTRL-C TO END")
+led = Output(14)
 
 while True:
-    fb.erase()
-    fb.draw(Text("A"), (0,0))
-    fb.draw(Text("B"), (8,0))
-    fb.draw(Text("C"), (8,8))
-    fb.show()
-    time.sleep(1)
+    num_uuts = 0
+    on = False
+    start = time.time()
+    while num_uuts <= 2 or num_uuts >= 12:
+        try:
+            num_uuts = FrameBuffer.detect()
+        except:
+            num_uuts = 0
 
-    fb.erase(0xF)
-    fb.show()
-    time.sleep(1)
+        if on:
+            led.on()
+        else:
+            led.off()
 
+        elapsed = time.time() - start
+        if on and elapsed > 0.3 or not on and elapsed > 2:
+            on = not on
+            start = time.time()
+
+        time.sleep(0.05)
+
+    fb_spec = [(8*x,0,0) for x in range(num_uuts)]
+    fb = FrameBuffer(fb_spec)
+
+    digits = [Text(str(i)) for i in range(10)]
+
+    def endcaps():
+        fb.erase()
+        fb.line((0,0), (7,7))
+        fb.line((0,7), (7,0))
+        fb.line((fb.width-8,0), (fb.width-1,7))
+        fb.line((fb.width-8,7), (fb.width-1,0))
+
+    # Number UUTs
+    endcaps()
+    for uut in range(1,num_uuts-1):
+        fb.draw(digits[uut], (8*uut+1, 0))
+    fb.show()
+    time.sleep(3)
+
+    # Brightness sequence
     for color in range(16):
-        fb.erase(color)
+        endcaps()
+        fb.rect((8,0), (fb.width-16,8), fill=True, color=color)
         fb.show()
-        time.sleep(2/16)
+        time.sleep(4/16)
 
-    fb.erase()
-    fb.show()
-    time.sleep(0.2)
-
-    for y in range(8):
-        fb.erase()
-        fb.line((8,y),(15,y))
+    # Horizontal line moving down
+    for y in reversed(range(8)):
+        endcaps()
+        fb.line((8,y),(fb.width-9,y))
         fb.show()
-        time.sleep(1/8)
+        time.sleep(4/8)
 
-    fb.erase()
-    fb.show()
-    time.sleep(0.2)
-
-    for x in range(8):
-        fb.erase()
-        fb.line((8+x,0),(8+x,7))
+    def hash(color=0xF):
+        for x in range(8, fb.width-8, 2):
+            for y in range(0,8,2):
+                fb.point(x, y, color=color)
+                fb.point(x + 1, y + 1, color=color)
         fb.show()
-        time.sleep(1/8)
 
+    # Hash 1
+    endcaps()
+    hash()
+    time.sleep(2)
+
+    # Hash 2
+    endcaps()
+    fb.rect((8,0), (fb.width-16,8), fill=True, color=0xF)
+    hash(color=0)
+    time.sleep(2)
+
+    led.on()
     fb.erase()
     fb.show()
-    time.sleep(0.2)
-
-    def square(startx, starty):
-        fb.erase()
-        for i in range(4):
-            fb.line((startx,starty+i),(startx+3,starty+i))
-        fb.show()
-        time.sleep(0.25)
-
-    square(8,4)
-    square(12,4)
-    square(8,0)
-    square(12,0)
-
-    fb.erase()
-    for x in range(9,16,2):
-        fb.line((x,7),(x+7,0))
-    for y in range(0,8,2):
-        fb.line((8,y),(15,y-7))
-    fb.show()
-    time.sleep(0.75)
-
-    fb.erase()
-    for x in range(8,16,2):
-        fb.line((x,7),(x+7,0))
-    for y in range(1,8,2):
-        fb.line((8,y),(15,y-7))
-    fb.show()
-    time.sleep(0.75)
+    try:
+        while True:
+            FrameBuffer.detect()
+            time.sleep(0.1)
+    except:
+        pass
+    led.off()
+            
+            
