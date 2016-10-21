@@ -111,8 +111,10 @@ def flash_until_button(led):
     
 def test_all_in_one_direction(led, xgood, ygood, zgood):
     flash_until_button(led)
-    flash = flasher(led, 0.2, 0.4)
-    test = tester(1,0,0)
+    for i in range(8):
+        off("FAIL" + str(i))
+    flash = flasher(led, 0.1, 0.2)
+    test = tester(xgood, ygood, zgood)
     results = []
     for result in test:
         if result != None:
@@ -144,7 +146,10 @@ while True:
     xresults = test_all_in_one_direction("XTEST", 1, 0, 0)
     yresults = test_all_in_one_direction("YTEST", 0, 1, 0)
     zresults = test_all_in_one_direction("ZTEST", 0, 0, 1)
-    for z in zip(xresults, yresults, zresults):
-        print(z)
-
-
+    for i, results in enumerate(zip(xresults, yresults, zresults)):
+        if False in results:
+            on("FAIL" + str(i))
+            off("PASS" + str(i))
+        else:
+            off("FAIL" + str(i))
+            on("PASS" + str(i))
