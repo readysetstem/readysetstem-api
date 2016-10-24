@@ -55,6 +55,11 @@ def off(pin_name):
         pin_io[pin_name].disable()
     pin_io[pin_name] = Input(pins[pin_name])
 
+def all_off():
+    for led in pins:
+        if led != "START":
+            off(led)
+
 #
 # flasher generator
 #
@@ -71,11 +76,18 @@ def flasher(pin_name, on_time, off_time):
             off(pin_name)
         yield
 
+def select_i2c_device(bus, part):
+    otherbus = 0 if bus else 1
+    def switch_cmd(bus, partmask):
+        os.system("/usr/sbin/i2cset -y 1 {:s} {:s}".format(hex(0x70+bus), hex(partmask)))
+    switch_cmd(bus, 1<<part)
+    switch_cmd(otherbus, 0x00)
+
 def tester(xgood, ygood, zgood):
     start = time.time()
     for bus in range(2):
         for part in range(4):
-            os.system("/usr/sbin/i2cset -y 1 {:s} {:s}".format(hex(0x70+bus),hex(1<<part)))
+            select_i2c_device(bus, part)
             try:
                 a = Accel()
             except:
@@ -100,6 +112,7 @@ def tester(xgood, ygood, zgood):
                 def mean(items):
                     return sum(items)/len(items)
                 xs, ys, zs = list(zip(*forces))
+                print(bus, part, xs, ys, zs)
                 yield near(xgood, mean(xs)) and near(ygood, mean(ys)) and near(zgood, mean(zs))
 
 def flash_until_button(led):
@@ -135,14 +148,13 @@ start_button = Button(pins["START"])
 #
 os.system("echo 8 > /sys/class/gpio/unexport")
 
-for led in pins:
-    if led != "START":
-        off(led)
+all_off()
 
 while True:
     for led in ["XTEST", "YTEST", "ZTEST"]:
         off(led)
     flash_until_button("READY")
+    all_off()
     xresults = test_all_in_one_direction("XTEST", 1, 0, 0)
     yresults = test_all_in_one_direction("YTEST", 0, 1, 0)
     zresults = test_all_in_one_direction("ZTEST", 0, 0, 1)
