@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from rstem.led_matrix import FrameBuffer, Text
 from rstem.gpio import Output
 import traceback

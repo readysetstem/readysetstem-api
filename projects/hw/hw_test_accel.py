@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from rstem.accel import Accel
 from rstem.gpio import Input, Output
 from rstem.button import Button
