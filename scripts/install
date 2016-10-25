@@ -11,8 +11,8 @@ fi
 
 install_chromium() {
     # If chromium pkg is not available, install from ubuntu.com packages
-    if ! sudo apt-get install -y chromium; then
-        if ! sudo apt-get install -y chromium-browser; then
+    if ! dpkg -s chromium && ! which chromium; then
+        if ! dpkg -s chromium-browser && ! which chromium-browser; then
             URL="http://ports.ubuntu.com/pool/universe/c/chromium-browser/"
             VER="48.0.2564.82-0ubuntu0.15.04.1.1193"
             FILES=(
@@ -29,8 +29,11 @@ install_chromium() {
             popd
             rm -rf $TMPDIR
 
-            sudo ln -sf $(which chromium-browser) /usr/bin/chromium
         fi
+    fi
+    # Create chromium symlink if needed
+    if ! which chromium; then
+        sudo ln -sf $(which chromium-browser) /usr/bin/chromium
     fi
 }
 
