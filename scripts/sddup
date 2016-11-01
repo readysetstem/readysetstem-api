@@ -6,15 +6,16 @@
 # cards after copy.
 #
 # USB Ports MUST be connected in the following positions (shown looking into ports)
-#   -----------------------------------------------------------------------------|
-#   |              |   USB CARD (MASTER)       |   USB 7-PORT POWERED HUB (TOP)  |
-#   |   ETHERNET   |---------------------------|---------------------------------|
-#   |              |   KEYBOARD & MOUSE (OPT)  |   USB 7-PORT POWERED HUB (BOT)  |
-#   -----------------------------------------------------------------------------|
+#   -------------------------------------------------------------------------------------
+#   |              |   2: USB DRIVE w/IMG (MASTER) |   4: USB 7-PORT POWERED HUB (TOP)  |
+#   |   ETHERNET   |-------------------------------|------------------------------------|
+#   |              |   3: KEYBOARD & MOUSE (OPT)   |   5: USB 7-PORT POWERED HUB (BOT)  |
+#   -------------------------------------------------------------------------------------
 #
 # - USB Hubs should have an SD card in SD card readers in each port, for each
 #   duplication to be made.
 # - Master SD Card should be in the port shown in the table above.
+# - The number "N:" above shows the USB port number as defined by sysfs
 #
 to_port()
 {
@@ -41,6 +42,11 @@ to_port()
 # For debugging:
 #COUNT=count=2
 
+if [ $(id -u) -ne 0 ]; then
+    echo "Must run as root"
+    exit 1
+fi
+
 VERIFY_ONLY=
 if [ -n "$1" ]; then
     if [ "$1" == "ver" ]; then
@@ -53,39 +59,102 @@ fi
 
 echo "SD Duplicator..."
 
-SRC=/dev/disk/by-path/platform-bcm2708_usb-usb-0:1.2:1.0-scsi-0:0:0:0
-DESTS=/dev/disk/by-path/platform-bcm2708_usb-usb-0\:1.[45].*:0
+#
+# SRCS are all potential mounatble device partitions on usb ports 2 & 3 (see
+# header at top).
+# DESTS are all potential devices on usb ports 4 & 5 (see header at top).
+#
+SRCS=/dev/disk/by-path/platform-*usb-usb-0:1.[23]:1.0-scsi-0:0:0:0-part?
+DESTS=/dev/disk/by-path/platform-*usb-usb-0\:1.[45].*:0
 
-if [ ! -b "$SRC" ]; then
-    echo "Source SD card reader not found"
-    exit 1
-else
-    echo "Found source SD card reader"
-fi
-NUM_CARDS=`echo $DESTS | wc -w`
-echo "Found $NUM_CARDS destination SD card readers"
+#
+# Search for image file on any SRCS partitions, by mounting each in turn.
+# First one found will be used.  If either image file or associated md5 file
+# are not found, error out.
+#
 umount /dev/sd?? 2>/dev/null
-if ! blockdev --getsz $SRC >/dev/null; then
-    echo "Can't get SRC device size.  You need to run as root."
+M=/tmp/mount
+IMG=$M/sdcard.img
+MD5_FILE=$M/sdcard.md5
+mkdir -p $M
+umount $M 2>/dev/null
+echo "Searching sources for SD card image:"
+for src in $SRCS; do
+    echo "    Device: $src"
+    mount $src $M
+    [ -f $IMG ] && break
+    umount $M 2>/dev/null
+done
+if [ ! -f $IMG ]; then
+    echo "ERROR: Source image file ($(basename $IMG)) not found"
     exit 1
 fi
-BLOCKS=`blockdev --getsz $SRC`
-rm -rf sddup.tmp
-mkdir -p sddup.tmp
+if [ ! -f $MD5_FILE ]; then
+    echo "ERROR: Source md5 file ($(basename $MD5_FILE)) not found"
+    exit 1
+fi
+MASTER_MD5="`cat $MD5_FILE`"
+echo "Found source SD card image"
+
+#
+# Search all destinations devices for cards with readers.  Each destination
+# card reader found (with an SD card) should have the same exact block size as
+# the image file.
+#
+NUM_CARD_READERS=`echo $DESTS | wc -w`
+echo "Found $NUM_CARD_READERS destination SD card readers:"
+ERR=""
+IMG_BLKSIZE=$(stat --format %b $IMG)
+for dest in $DESTS; do
+    DEST_BLKSIZE=$(blockdev --getsz $dest 2>/dev/null)
+    if [ -n "$DEST_BLKSIZE" ]; then
+        if [ "$DEST_BLKSIZE" != "$IMG_BLKSIZE" ]; then
+            echo "ERROR: Destination SD card ($(to_port $dest)) different size than source"
+            exit 1
+        fi
+        DESTS_WITH_SDCARD="$DESTS_WITH_SDCARD $dest"
+    fi
+done
+for dest in $DESTS; do
+    DEST_BLKSIZE=$(blockdev --getsz $dest 2>/dev/null)
+    if [ -z "$DEST_BLKSIZE" ]; then
+        echo "    Reader in $(to_port $dest) (but WITHOUT SD card!)"
+    else
+        echo "    Reader in $(to_port $dest)"
+    fi
+done | sort
+NUM_CARDS=`echo $DESTS_WITH_SDCARD | wc -w`
+if [ $NUM_CARDS -eq 0 ]; then
+    echo "ERROR: No destination SD cards found"
+    exit 1
+fi
+if [ $NUM_CARDS != $NUM_CARD_READERS ]; then
+    echo "Using only above $NUM_CARDS readers WITH SD cards"
+fi
+DESTS="$DESTS_WITH_SDCARD"
+read -p "Press enter to continue"
 
 start_dup()
 {
     pids=
     for dest in $DESTS; do
-        dd bs=1M if=$SRC of=$dest $COUNT &
+        dd bs=1M if=$IMG of=$dest $COUNT &
         pids+="$! "
     done
 }
 
+#
+# Vefification saves the md5sum of each sdcard to a file in a temp directory.
+# The filename is the human-readable port name of the device (via function
+# to_port())
+#
 start_verification()
 {
+    rm -rf sddup.tmp
+    mkdir -p sddup.tmp
+
     pids=
-    for dest in $SRC $DESTS; do
+    for dest in $DESTS; do
         dd bs=1M if=$dest $COUNT | md5sum | cut -d" " -f1 > "sddup.tmp/`to_port $dest`" &
         pids+="$! "
     done
@@ -98,6 +167,7 @@ wait_pids()
     done
 }
 
+START=$(date +%s)
 if [ ! -n "$VERIFY_ONLY" ]; then
     echo
     echo "########################################################################"
@@ -118,13 +188,21 @@ echo "#"
 start_verification
 wait_pids
 
+END=$(date +%s)
+TOTAL_SECONDS=$((END-START))
+HOURS=$((TOTAL_SECONDS/3600))
+HOURS_REMAINDER=$((TOTAL_SECONDS%3600))
+MINUTES=$((HOURS_REMAINDER/60))
+SECONDS=$((HOURS_REMAINDER%60))
+
 echo
 echo "########################################################################"
 echo "# Verification output:"
 echo "#"
 
-master_md5="`cat sddup.tmp/master`"
-echo "master: $master_md5"
+#
+# 
+echo "master: $MASTER_MD5"
 echo
 TOTAL=0
 PASS=0
@@ -132,8 +210,7 @@ FAIL=0
 for card in sddup.tmp/*; do
     md5=`cat "$card"`
     name=`basename "$card"`
-    [ "$name" == master ] && continue
-    if [ "$md5" == "$master_md5" ]; then
+    if [ "$md5" == "$MASTER_MD5" ]; then
         verification="verified"
         PASS=$((PASS+1))
     else
@@ -153,7 +230,9 @@ elif [ "$FAIL" != 0 ]; then
     echo "----- INFO:       sudo ./sddup ver"
     echo "----- INFO: ...to verify only"
 else
-    echo "----- INFO: All $TOTAL cards passed verification"
+    # Note: %s needed, because format string can't start with "--"
+    printf "%s----- INFO: All $TOTAL cards passed verification (time %02d:%02d:%02d)\n" "" \
+        $HOURS $MINUTES $SECONDS
 fi
 
 rm -rf sddup.tmp
